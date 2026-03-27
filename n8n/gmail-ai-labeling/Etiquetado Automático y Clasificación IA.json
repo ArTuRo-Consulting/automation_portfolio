@@ -1,0 +1,523 @@
+{
+  "name": "Etiquetado Automático y Clasificación IA",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "hour": 6
+            },
+            {
+              "hour": 11
+            },
+            {
+              "hour": 15
+            }
+          ]
+        },
+        "filters": {
+          "labelIds": [
+            "INBOX"
+          ]
+        }
+      },
+      "id": "cdb551d2-7a7d-4992-a40d-4155b93bb371",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1104,
+        256
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HDVLbYJDsc5gDFMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.from}}",
+              "operation": "contains",
+              "value2": "donotreply@upwork.com"
+            }
+          ]
+        }
+      },
+      "id": "1abfa32e-a938-4903-a16c-e61e0fb9a7fa",
+      "name": "Es de Upwork?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "model": "o4-mini",
+        "prompt": "=### ROLE:\nYou are a deterministic classifier for Upwork notification emails.\n\nYour ONLY task is to classify the incoming email as:\n\nLEAD_CALIFICADO\nor\nLEAD_NO_CALIFICADO\n\nYou must return ONLY one of those two exact words.\nNo explanations.\nNo extra text.\nNo punctuation.\nNo JSON.\nNo markdown.\n\n----------------------------------------\n### QUALIFICATION RULES\n\nClassify as LEAD_CALIFICADO ONLY IF ALL the following are TRUE:\n\n1) Payment Verified:\nThe email explicitly indicates that the client has verified payment.\n\n2) Client History:\nClient total spent is >= $500.\n\n3) Budget Requirement:\nAt least ONE of the following:\n- Hourly rate >= $33/hr\n- Fixed price or total budget >= $100\n\n4) Job Relevance:\nThe job description references at least ONE of these topics:\n\nAutomation / AI / Tools:\n- n8n\n- Make.com\n- Zapier\n- workflow automation\n- automation system\n- CRM automation\n- GoHighLevel\n- GHL\n- WhatsApp automation\n- WhatsApp chatbot\n- WhatsApp API\n- AI automation\n- AI agent\n- AI workflow\n- Claude API\n- OpenAI API\n- ChatGPT integration\n- chatbot developer\n- chatbot builder\n- Voice AI\n- VAPI\n- Retell\n- AI phone agent\n- Custom GPT\n- knowledge base AI\n- Meta Ads automation\n- Facebook Ads automation\n- Trello automation\n- Monday.com automation\n- Notion automation\n- AI content automation\n- social media automation\n- AI consultation\n- AI training for business\n- marketing automation\n- lead automation\n- email automation\n\n----------------------------------------\nClassify as LEAD_NO_CALIFICADO if:\n\n- ANY of the qualification rules are NOT met.\n- The client has $0 spent and no verified history.\n- The job is only about:\n  video editor, reels editor, TikTok editor, YouTube editor, photo editor, photographer\n  AND does NOT mention AI or automation.\n- The job is only about:\n  copywriter, content writer, community manager\n  AND does NOT mention AI or automation.\n\n----------------------------------------\n### IMPORTANT:\n\nIf there is ambiguity or missing data,\ndefault to LEAD_NO_CALIFICADO.\n\n----------------------------------------\n\nEMAIL DATA:\nFrom: {{ $('Gmail Trigger').item.json.From }}\nSubject:{{ $('Gmail Trigger').item.json.Subject }}\nBody:{{ $('Gmail Trigger').item.json.snippet }}\nSnippet:{{ $('Gmail Trigger').item.json.snippet }}",
+        "options": {},
+        "requestOptions": {}
+      },
+      "id": "91eb63f6-60b1-413d-9145-7ed9ecaed144",
+      "name": "Clasificar Lead Upwork",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        112
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "j7z62OuOgFA4nSe8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HyH544A83YMO52DQmSUTSd6r3B_LCdSaNbf8Oxtasvc",
+          "mode": "list",
+          "cachedResultName": "Análisis Emails Upwork",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HyH544A83YMO52DQmSUTSd6r3B_LCdSaNbf8Oxtasvc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1799674076,
+          "mode": "list",
+          "cachedResultName": "23 nov",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HyH544A83YMO52DQmSUTSd6r3B_LCdSaNbf8Oxtasvc/edit#gid=1799674076"
+        },
+        "options": {}
+      },
+      "id": "c00427d9-170b-426f-97a8-eb682de2df5b",
+      "name": "Registrar Leads Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -496,
+        112
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "75w59JzXVxT22FLT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{$json.message.content}}",
+        "rules": {
+          "rules": [
+            {
+              "operation": "contains",
+              "value2": "LEAD_CALIFICADO"
+            },
+            {
+              "operation": "contains",
+              "value2": "LEAD_NO_CALIFICADO"
+            }
+          ]
+        }
+      },
+      "id": "7227de01-7862-4aab-83ab-f5006b0901e9",
+      "name": "Switch Leads",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{$(\"Gmail Trigger\").item.json.id}}",
+        "labelIds": [
+          "Label_ID_LEAD_CALIFICADO"
+        ]
+      },
+      "id": "e4d5e433-9ea6-4ed1-b08b-8be128352d9d",
+      "name": "Label LEAD_CALIFICADO",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "a0f02109-fe53-472b-9f80-a76c0c834d0f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HDVLbYJDsc5gDFMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{$(\"Gmail Trigger\").item.json.id}}",
+        "labelIds": [
+          "Label_ID_LEAD_NOCALIFICADO"
+        ]
+      },
+      "id": "0561450a-1ca7-42b9-8205-20344206f4d1",
+      "name": "Label LEAD_NO_CALIFICADO",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        0,
+        208
+      ],
+      "webhookId": "28a8c7ca-54a3-4094-8694-1d278c263877",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HDVLbYJDsc5gDFMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "model": "gpt-4.1-mini",
+        "prompt": {
+          "messages": [
+            {
+              "role": "system",
+              "content": "=Eres un experto en gestión y clasificación de correos electrónicos. Tu única tarea es analizar el contenido completo de cada correo y clasificarlo en una sola de estas tres categorías: -IMPORTANTE -IMPORTANTE/Reuniones -Newsletter_IA  Clasifica como \"IMPORTANTE\" si el correo cumple al menos UNA de las siguientes condiciones: Contiene información urgente, prioritaria, de seguimiento, o de decisiones relevantes. Proviene de alguien claramente relacionado con trabajo, proyectos o clientes (por ejemplo, con dominio corporativo o nombres de personas con cargo).  Clasifica como \"IMPORTANTE/Reuniones\" si el correo menciona o propone una reunión, cita, llamada, meeting, calendar, agendar, entrevista, videollamada o cualquier sinónimo relacionado.  Clasifica como \"Newsletter_IA\" únicamente si el correo menciona claramente temas relacionados con inteligencia artificial o tecnología, o proviene de boletines reconocidos, incluyendo: The Neuron News & Trends TLDR Design Superhuman Inteligencia artificial, IA, AI news, machine learning, automatización, modelos de lenguaje, tendencias tecnológicas, industria IA Noticias, resúmenes, análisis o historias destacadas sobre IA o innovación tecnológica  -Si el correo no menciona estos temas o boletines, no hagas nada y no etiquetes nada.  - Enviado de: {{ $('Gmail Trigger').item.json.From }}- Asunto: {{ $('Gmail Trigger').item.json.Subject }} snippet: {{ $('Gmail Trigger').item.json.snippet }}- Resultado (responde solo una de las siguientes palabras, sin explicaciones):  -IMPORTANTE -IMPORTANTE/Reuniones -Newsletter_IA  \"   y el google Sheet contiene: \"Fecha_Recepcion\t2025-12-01T23:40:49.991Z\tID_Unico\t\"Asunto\t\"\t\"Remitente\t\"\tCuerpo_Text\tResumen_Snippet\tPUBLICADO\tPost_ID_Linkedin\tURL_PUBLICACION\". tienes dudas?   esta ultima Google Sheets sirve de base para crear post automaticos tipo arturo.newsletter.mx@gmail.com  letter diario en linkedin "
+            }
+          ]
+        },
+        "options": {},
+        "requestOptions": {}
+      },
+      "id": "232c8d95-365e-4936-b38c-9791c48337cc",
+      "name": "Clasificador IA Múltiple",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        512
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "j7z62OuOgFA4nSe8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{$json.message.content}}",
+        "rules": {
+          "rules": [
+            {
+              "operation": "contains",
+              "value2": "IMPORTANTE/Reuniones"
+            },
+            {
+              "operation": "contains",
+              "value2": "IMPORTANTE"
+            },
+            {
+              "operation": "contains",
+              "value2": "Newsletter_IA"
+            }
+          ]
+        }
+      },
+      "id": "7e6aeaff-0ec4-445a-bb6c-e17fe237cd60",
+      "name": "Switch Categorías",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{$(\"Gmail Trigger\").item.json.id}}",
+        "labelIds": [
+          "Label_4339158766576999021"
+        ]
+      },
+      "id": "1cf0587a-c8d2-42b7-854e-f8736ed712b2",
+      "name": "Label IMPORTANTE/Reuniones",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        400
+      ],
+      "webhookId": "6d6678ce-1791-41a4-83bd-77d39b9c6e31",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HDVLbYJDsc5gDFMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{$(\"Gmail Trigger\").item.json.id}}",
+        "labelIds": [
+          "Label_ID_IMPORTANTE"
+        ]
+      },
+      "id": "ccf5df61-0693-441b-8efb-d048d35d2398",
+      "name": "Label IMPORTANTE",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        608
+      ],
+      "webhookId": "6915f997-d656-4088-b8db-74997dbc6310",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HDVLbYJDsc5gDFMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{$(\"Gmail Trigger\").item.json.id}}",
+        "labelIds": [
+          "Label_ID_Newsletter_AI"
+        ]
+      },
+      "id": "b46c730c-3193-4340-a1a8-75d9100b4ea7",
+      "name": "Label Newsletter_AI",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        800
+      ],
+      "webhookId": "0370d899-b40e-4868-a9cd-c668fd496bfb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HDVLbYJDsc5gDFMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11WrWVrjVLd7jOXdzSu2grWW8ODa8xGA1sKN-rLuhrAY",
+          "mode": "list",
+          "cachedResultName": "Base_Noticias_AI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11WrWVrjVLd7jOXdzSu2grWW8ODa8xGA1sKN-rLuhrAY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2124633042,
+          "mode": "list",
+          "cachedResultName": "Hoja_Make_AI_R01",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11WrWVrjVLd7jOXdzSu2grWW8ODa8xGA1sKN-rLuhrAY/edit#gid=2124633042"
+        },
+        "options": {}
+      },
+      "id": "5d17109e-c152-4091-ad6e-4f8d07bd9717",
+      "name": "Base_Noticias_AI",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        0,
+        800
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "75w59JzXVxT22FLT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{$(\"Gmail Trigger\").item.json.id}}",
+        "labelIds": [
+          "Label_ID_PROCESSED_AI"
+        ]
+      },
+      "id": "3acb968e-66a2-4875-a709-67ce11284499",
+      "name": "Label PROCESSED_AI",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        208,
+        800
+      ],
+      "webhookId": "e71930a1-a6bf-461c-ac7a-d5c1276c83eb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HDVLbYJDsc5gDFMH",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Es de Upwork?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Es de Upwork?": {
+      "main": [
+        [
+          {
+            "node": "Clasificar Lead Upwork",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clasificador IA Múltiple",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificar Lead Upwork": {
+      "main": [
+        [
+          {
+            "node": "Registrar Leads Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar Leads Sheet": {
+      "main": [
+        [
+          {
+            "node": "Switch Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Leads": {
+      "main": [
+        [
+          {
+            "node": "Label LEAD_CALIFICADO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Label LEAD_NO_CALIFICADO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificador IA Múltiple": {
+      "main": [
+        [
+          {
+            "node": "Switch Categorías",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Categorías": {
+      "main": [
+        [
+          {
+            "node": "Label IMPORTANTE/Reuniones",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Label IMPORTANTE",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Label Newsletter_AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Label Newsletter_AI": {
+      "main": [
+        [
+          {
+            "node": "Base_Noticias_AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Base_Noticias_AI": {
+      "main": [
+        [
+          {
+            "node": "Label PROCESSED_AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "396dc0ee-0d4a-4895-9ae3-5e00d9eae538",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "247ef587dde7b7d555cea184a34eefdacf5e747d19bdd66f2807f3411cc15199"
+  },
+  "id": "iBF8IL4EXca0FxtW",
+  "tags": []
+}
