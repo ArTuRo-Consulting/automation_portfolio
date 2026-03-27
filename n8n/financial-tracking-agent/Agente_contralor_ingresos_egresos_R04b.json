@@ -1,0 +1,3603 @@
+{
+  "name": "Agente_contralor_ingresos_egresos_R04",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contralor-erick",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2480,
+        560
+      ],
+      "id": "1af2b7e5-c404-4efb-8a38-b4c01491c26d",
+      "name": "Webhook_Unificado",
+      "webhookId": "contralor-erick"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "router-cond-1",
+              "leftValue": "=\n{{ $json.body.data.message.conversation || $json.body.data.message.buttonsResponseMessage?.selectedDisplayText || ($json.body.data.message.pollUpdateMessage?.vote?.selectedOptions ? $json.body.data.message.pollUpdateMessage.vote.selectedOptions[0] : \"\") }}",
+              "rightValue": "CONFIRMAR",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "f3c55da9-493c-4a50-a412-88de681813c1",
+              "leftValue": "={{ $json.body.data.message.conversation || $json.body.data.message.buttonsResponseMessage?.selectedDisplayText || ($json.body.data.message.pollUpdateMessage?.vote?.selectedOptions ? $json.body.data.message.pollUpdateMessage.vote.selectedOptions[0] : \"\") }}",
+              "rightValue": "RECHAZAR",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "78d3224d-2174-4a09-815e-7260d41dc55c",
+              "leftValue": "={{ $json.body.data.messageType }}",
+              "rightValue": "pollUpdateMessage",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2032,
+        560
+      ],
+      "id": "8ac9741e-6b15-411e-95e8-3d7f0489ada6",
+      "name": "¿Es Confirmación?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e1",
+              "name": "evento",
+              "value": "={{ $json.body.event }}",
+              "type": "string"
+            },
+            {
+              "id": "e2",
+              "name": "instancia",
+              "value": "={{ $json.body.instance }}",
+              "type": "string"
+            },
+            {
+              "id": "e3",
+              "name": "idmensaje",
+              "value": "={{ $json.body.data.key.id }}",
+              "type": "string"
+            },
+            {
+              "id": "e4",
+              "name": "numeroremitente",
+              "value": "={{ $json.body.data.key.remoteJid }}",
+              "type": "string"
+            },
+            {
+              "id": "e5",
+              "name": "nombrecontacto",
+              "value": "={{ $json.body.data.pushName }}",
+              "type": "string"
+            },
+            {
+              "id": "e6",
+              "name": "mensajetexto",
+              "value": "={{ $json.body.data.message.conversation }}",
+              "type": "string"
+            },
+            {
+              "id": "e7",
+              "name": "tipomensaje",
+              "value": "={{ $json.body.data.messageType }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1808,
+        1232
+      ],
+      "id": "c6155060-bc4f-4ac0-b33c-b2c468212a05",
+      "name": "organizar_datos"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1584,
+        1232
+      ],
+      "id": "d95be700-e310-43ea-a31f-eef09a91f1cd",
+      "name": "Wait",
+      "webhookId": "contralor-erick-wait-001"
+    },
+    {
+      "parameters": {
+        "resource": "chat-api",
+        "operation": "read-messages",
+        "instanceName": "={{ $('organizar_datos').item.json.instancia }}",
+        "remoteJid": "={{ $('organizar_datos').item.json.numeroremitente }}",
+        "messageId": "={{ $('organizar_datos').item.json.idmensaje }}"
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        -1360,
+        1232
+      ],
+      "id": "25a23da1-a16d-49c5-867b-612acc664177",
+      "name": "leermensaje",
+      "credentials": {
+        "evolutionApi": {
+          "id": "P8U5dUCTGfLAcew9",
+          "name": "Evolution API VPS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('organizar_datos').item.json.tipomensaje }}",
+                    "rightValue": "conversation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "sw1"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "sw2",
+                    "leftValue": "={{ $('organizar_datos').item.json.tipomensaje }}",
+                    "rightValue": "audioMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "sw3",
+                    "leftValue": "={{ $('organizar_datos').item.json.tipomensaje }}",
+                    "rightValue": "imageMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "imagen"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "sw4",
+                    "leftValue": "={{ $('organizar_datos').item.json.tipomensaje }}",
+                    "rightValue": "documentMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "documento"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "no_procesamos"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1136,
+        1184
+      ],
+      "id": "12f29e1c-9eed-4cd5-aa65-f9f44c414ee6",
+      "name": "tipomensaje"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "data",
+              "value": "={{ $('Webhook_Unificado').item.json.body.data.message.base64 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -912,
+        752
+      ],
+      "id": "38acc2f8-72d9-48e8-ab00-9893732c08f4",
+      "name": "extraer_base64_audio"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a2",
+              "name": "data",
+              "value": "={{ $('Webhook_Unificado').item.json.body.data.message.base64 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -912,
+        1040
+      ],
+      "id": "840b2958-c461-4494-814b-a4f229152e8b",
+      "name": "extraer_base64_imagen"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a3",
+              "name": "data",
+              "value": "={{ $('Webhook_Unificado').item.json.body.data.message.base64 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -912,
+        1424
+      ],
+      "id": "1beffd97-623b-4d1d-aa86-1fd7f16df8c6",
+      "name": "extraer_base64_documento"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data",
+        "options": {
+          "mimeType": "audio/wav"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -688,
+        752
+      ],
+      "id": "b825a8c0-b897-4aca-9f82-3b266597b9ed",
+      "name": "Convert_audio"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data",
+        "options": {
+          "mimeType": "image/png"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -688,
+        1040
+      ],
+      "id": "06d9e4cc-8a30-4adb-8e28-559449519496",
+      "name": "Convert_to_image"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data",
+        "options": {
+          "fileName": "={{ $('Webhook_Unificado').item.json.body.data.message.documentMessage.title }}",
+          "mimeType": "={{ $('Webhook_Unificado').item.json.body.data.message.documentMessage.mimetype }}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -688,
+        1424
+      ],
+      "id": "d7988fa3-8f2e-4930-9251-8e0f212957c7",
+      "name": "Convert_documento"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -400,
+        752
+      ],
+      "id": "c5383fd0-feff-41b8-b002-8e40b1c7e1de",
+      "name": "Analyze_audio",
+      "credentials": {
+        "openAiApi": {
+          "id": "j7z62OuOgFA4nSe8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "text": "Eres un asistente contable. Analiza esta imagen con detalle. Si es un comprobante, ticket, factura o recibo: extrae TODOS los datos visibles (fecha, monto total, concepto/descripción, proveedor/establecimiento, método de pago si aparece). Transcribe cualquier texto visible. Si no es un comprobante financiero, descríbela detalladamente.",
+        "inputType": "base64",
+        "options": {
+          "detail": "auto"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -400,
+        1040
+      ],
+      "id": "5af24ca8-e22a-42da-93b7-03844b109395",
+      "name": "Analyze_image",
+      "credentials": {
+        "openAiApi": {
+          "id": "j7z62OuOgFA4nSe8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Eres un asistente experto en lectura de documentos contables y financieros. Lee cuidadosamente el archivo que te envío (puede ser un PDF, imagen de factura, ticket o comprobante). Devuélveme el contenido del documento en texto plano, en español, con el máximo detalle posible. Extrae especialmente: fecha, monto total, concepto, proveedor, método de pago. Si el documento está en otro idioma, tradúcelo al español. Transcribe cualquier texto visible."
+            },
+            {
+              "type": "file",
+              "fileType": "base64",
+              "fileName": "={{ $('Webhook_Unificado').item.json.body.data.message.documentMessage.fileName }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        1424
+      ],
+      "id": "b12b0ce6-55f8-40a3-a40f-4e28ad4319a2",
+      "name": "Analyze_documento",
+      "credentials": {
+        "openAiApi": {
+          "id": "j7z62OuOgFA4nSe8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "u1",
+              "name": "input",
+              "value": "={{ $('organizar_datos').item.json.mensajetexto }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -112,
+        560
+      ],
+      "id": "741fe72a-bffc-4a8c-afea-090f4ddd7ccb",
+      "name": "texto"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "u2",
+              "name": "input",
+              "value": "=<audio>\n{{ $json.text }}\n</audio>\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -112,
+        752
+      ],
+      "id": "7ec3db44-14f0-4e07-a76e-5805219532b6",
+      "name": "audio"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "u3",
+              "name": "input",
+              "value": "=<imagen>\n{{ $json['0'].content[0].text }}\n</imagen>\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -112,
+        1040
+      ],
+      "id": "c3598450-1f08-4770-af60-124be6acd6f7",
+      "name": "imagen"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "u4",
+              "name": "input",
+              "value": "=<documento>\n{{ $json.output[0].content[0].text }}\n</documento>\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -112,
+        1424
+      ],
+      "id": "fe4c25d9-9c55-4e36-80b0-cfad707039f9",
+      "name": "documento"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "u5",
+              "name": "input",
+              "value": "={{ $json.input }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        1136
+      ],
+      "id": "f753df4e-32db-4ccd-92f5-d4b80b4a13aa",
+      "name": "unificar_input"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $('organizar_datos').item.json.numeroremitente }}",
+        "messageData": "={{ $json.input }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        336,
+        1136
+      ],
+      "id": "de2cc461-2662-4177-9aa3-1a9f3f3038cd",
+      "name": "guardar_mensajes",
+      "credentials": {
+        "redis": {
+          "id": "pKhUqN7pmPm4hhHp",
+          "name": "Redis VPS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        1136
+      ],
+      "id": "5eb95fa4-3c5e-4b2d-bfb0-eca1c45ce575",
+      "name": "esperar_mas_mensajes",
+      "webhookId": "contralor-erick-wait-msgs"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "={{ $('organizar_datos').item.json.numeroremitente }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        784,
+        1136
+      ],
+      "id": "638adfe9-d96d-4f63-b941-67a6bf40a3c7",
+      "name": "recuperar_lista_mensajes",
+      "credentials": {
+        "redis": {
+          "id": "pKhUqN7pmPm4hhHp",
+          "name": "Redis VPS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ck1",
+              "leftValue": "={{ $json.propertyName.last() }}",
+              "rightValue": "={{ $('unificar_input').item.json.input }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1008,
+        1136
+      ],
+      "id": "792a10e5-3a78-46bd-8f2d-b46dc3176ac1",
+      "name": "es_el_ultimo_mensaje?"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        1232
+      ],
+      "id": "66dcf280-6aba-4944-ab81-aa7ed5d2eb51",
+      "name": "No Operation, no_hacer_nada"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cc1",
+              "name": "input_final",
+              "value": "={{ $json.propertyName.join('\\n') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1232,
+        1040
+      ],
+      "id": "c08a0f67-0c86-4bae-ae10-fe1b75fdba5f",
+      "name": "concatenar_mensaje"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Mensaje del usuario: {{ $json.input_final }}\nnombre de usuario: {{ $('Webhook_Unificado').item.json.body.data.pushName }}\nfecha actual: {{ $now }}",
+        "options": {
+          "systemMessage": "###ROLE\n\nYou are \"Arturito n8n\", an advanced Financial Controller AI Agent.\n\nYou supervise and validate income (ingresos) and expense (egresos) movements for the \"Erick\" financial account.\n\n\nYou only return structured JSON.\n\nYou operate inside a controlled financial system with mandatory human confirmation.\n\n###CRITICAL STOP-AND-THINK (HIGHEST PRIORITY)\n\nIf the user message is a short confirmation such as:\n\"SÍ\", \"CONFIRMO\", \"ADELANTE\", \"PÓNLO\", \"CORRECTO\"\n\nIMMEDIATELY return:\n\n{\n\"intent_type\": \"confirmar\",\n\"estado_movimiento\": \"ultimo_pendiente\",\n\"requires_clarification\": false\n}\n\nDO NOT extract financial data.\nDO NOT generate new movement.\nDO NOT analyze history.\n\nIf the user message clearly modifies a previous movement\n(example: \"No es ingreso, es egreso\", \"Corrige a 800\")\n\nReturn:\n\n{\n\"intent_type\": \"corregir\",\n\"estado_movimiento\": \"ultimo_pendiente\",\n\"corrections\": { ... }\n}\n\n##INTENT CLASSIFICATION\n\nPossible intent_type values:\n\nnuevo_movimiento\n\nconfirmar\n\ncorregir\n\nmantener_pendiente\n\notro\n\nINTENT CLASSIFICATION:\n- Si el usuario registra un gasto/ingreso: \"nuevo_movimiento\"\n- Si el usuario confirma un movimiento: \"confirmar\"\n- Si el usuario pide su resumen/reporte: \"resumen\"\n- Si el usuario pide su balance/saldo: \"balance\"\n- Si el usuario falta información: \"informacion_incompleta\"\n\nUnder NO circumstances should you classify an ambiguous receipt as \"otro\".\n\nWhen generating the JSON for this case, you MUST include the `missing_fields` array containing exactly this Spanish text:\n[\"Falta confirmar, según el recibo, la cantidad, y si lo registro como Ingreso o Egreso\"]\n\n\n###MOVEMENT CLASSIFICATION RULES\n\nErick is always the account owner.\n\nThe following keywords ALWAYS indicate \"egreso\":\n\nCargo\n\nGasto\n\nPago\n\nCompré\n\nTransferencia de Erick\n\nThe following keywords ALWAYS indicate \"ingreso\":\n\nAbono\n\nIngreso\n\nRecibí\n\nDepósito\n\nTransferencia a Erick\n\n###CONTROLLER RESPONSIBILITIES (For nuevo_movimiento only)\n\nWhen intent_type = \"nuevo_movimiento\":\n\nYou must extract:\n\ntipo (ingreso / egreso)\n\nfecha\n\nmonto\n\nconcepto\n\ncategoria\n\nYou must evaluate:\n\nFixed rules (e.g., nurse shift = 800)\n\nMonthly fixed income = 10000 on last day\n\nDate inconsistencies\n\nDuplicate same-day entries\n\nSemantic overlaps\n\nHistorical accumulation anomalies\n\nYou must compute:\n\nconfidence_level (0–100 integer)\n\nIf ambiguity exists:\nrequires_clarification = true\n\n##OUTPUT FORMAT (JSON ONLY — NO TEXT)\n\nFor nuevo_movimiento:\n\n{\n\"intent_type\": \"nuevo_movimiento\",\n\"tipo\": \"ingreso/egreso\",\n\"fecha\": \"YYYY-MM-DD\",\n\"monto\": 0,\n\"concepto\": \"...\",\n\"categoria\": \"...\",\n\"confidence_level\": 0,\n\"requires_clarification\": false\n}\n\nFor confirm:\n\n{\n\"intent_type\": \"confirmar\",\n\"estado_movimiento\": \"ultimo_pendiente\",\n\"requires_clarification\": false\n}\n\nFor corregir:\n\n{\n\"intent_type\": \"corregir\",\n\"estado_movimiento\": \"ultimo_pendiente\",\n\"corrections\": { ... }\n}\n\nReturn ONLY raw JSON.\nNo explanations.\nNo markdown.\nNo extra text.\nFor incomplete info (missing money, date, etc):\n{\n\"intent_type\": \"informacion_incompleta\",\n\"missing_fields\": [\"monto\", \"concepto\"]\n}\n\nFor greetings or unrelated chat:\n{\n\"intent_type\": \"otro\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1456,
+        1040
+      ],
+      "id": "782c0204-4a42-4e3b-927f-937b5cbb9b5a",
+      "name": "agente_IA_principal"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1472,
+        1264
+      ],
+      "id": "d2de7a08-1439-433e-b675-f82e0520330d",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "j7z62OuOgFA4nSe8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=$('organizar_datos').item.json.numeroremitente + '_v3' }}",
+        "tableName": "memoria_contralor_erick",
+        "contextWindowLength": 6
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1600,
+        1264
+      ],
+      "id": "9f6693e2-c95d-45f2-abe7-4adccac2ba49",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "Q3noT6ElJRkFq3n6",
+          "name": "Postgres Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraer JSON del output del agente IA\nconst raw = $input.item.json.output || '';\n\n// Intentar extraer JSON de distintos formatos\nlet parsed;\ntry {\n  // Caso 1: JSON dentro de bloques ```json\n  const match1 = raw.match(/```json\\s*([\\s\\S]*?)\\s*```/);\n  if (match1) { \n    parsed = JSON.parse(match1[1]); \n  } else {\n    // Caso 2: Buscar cualquier cosa entre { } o [ ] (ahora con soporte para listas)\n    const match2 = raw.match(/([\\{\\[][\\s\\S]*[\\}\\]])/);\n    if (match2) { \n      parsed = JSON.parse(match2[1]); \n    } else { \n      parsed = JSON.parse(raw); \n    }\n  }\n\n  // Si la IA mandó una lista [ ... ], tomamos solo el primer elemento\n  if (Array.isArray(parsed)) {\n    parsed = parsed[0];\n  }\n} catch (e) {\n  // Si falla, el error aparecerá en n8n\n  parsed = { intent: 'informacion_incompleta', missing_fields: ['parse_error'], error_msg: e.message };\n}\n\n// Preservar contexto de sesión (Jala estos datos de tus nodos)\nparsed._numeroremitente = $('Webhook_Unificado').item.json.body.data.key.remoteJid;\nparsed._nombrecontacto  = $('organizar_datos').item.json.nombrecontacto;\nparsed._instancia       = $('Webhook_Unificado').item.json.body.instance;\n// Normalizar intent_type a intent para no romper los nodos siguientes\nparsed.intent = parsed.intent_type || parsed.intent;\n\nreturn [{ json: parsed }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2256,
+        1040
+      ],
+      "id": "095502b4-a38c-4b14-913f-6dfc4bde493f",
+      "name": "parsear_json_agente"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ri1",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "nuevo_movimiento",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "registro"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f1819fcb-6d10-4b47-8664-41402bc535d9",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "confirmar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "confirmacion"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ri2",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "resumen",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "resumen"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ri3",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "balance",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "balance"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ri4",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "informacion_incompleta",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "informacion_incompleta"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "76ad8d3b-1390-41b6-86a1-4c4849015c5d",
+                    "leftValue": "={{ $json.intent_type }}",
+                    "rightValue": "corregir",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "corregir"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "otro"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2480,
+        976
+      ],
+      "id": "4b8ea652-6d53-4f27-8e4f-ca8ad8cb71c5",
+      "name": "clasificar_intent"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "tc1",
+              "leftValue": "={{ $json._tipomensaje }}",
+              "rightValue": "imageMessage",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "tc2",
+              "leftValue": "={{ $json._tipomensaje }}",
+              "rightValue": "documentMessage",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2704,
+        752
+      ],
+      "id": "e603860b-7527-4c65-bebc-601d078d16e2",
+      "name": "tiene_comprobante?"
+    },
+    {
+      "parameters": {
+        "name": "={{ $now.format('YYYYMMDD_HHmmss') + '_' + ($json._nombrecontacto || 'erick') + '_comprobante' }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1sJLRqVIJJRHOpcRQ-grddNaGSnb0N0WM",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2928,
+        672
+      ],
+      "id": "659c79cc-f941-4d30-b582-112b327f964d",
+      "name": "subir_comprobante_drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "4ugUZ4FdQjDdvgSz",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "pf1",
+              "name": "url_ticket",
+              "value": "={{ $json.webViewLink || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "pf2",
+              "name": "agente_data",
+              "value": "={{ $('parsear_json_agente').item.json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3152,
+        672
+      ],
+      "id": "8c282d3d-6df4-4938-b75f-c08b6c9bbeec",
+      "name": "agregar_url_comprobante"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener el JSON crudo del Agente\nconst agente = $('parsear_json_agente').item.json;\n\n// Si la IA usó memory y mandó correcciones en lugar del objeto principal, las extraemos\nconst datosFinancieros = agente.corrections ? agente.corrections : agente;\n\n// Extraer URL del ticket si existe\nconst urlTicket = $input.item.json.url_ticket || $input.item.json.agente_data?.url_ticket || '';\n\nconst timestamp = new Date().getTime();\nconst idMovimiento = `MOV-${timestamp}`;\n\nreturn [{\n  json: {\n    id_movimiento:           idMovimiento,\n    fecha:                   datosFinancieros.fecha || new Date().toISOString().split('T')[0],\n    tipo:                    datosFinancieros.tipo || '',\n    categoria:               datosFinancieros.categoria || '',\n    concepto:                datosFinancieros.concepto || datosFinancieros.descripcion || '',\n    monto:                   datosFinancieros.monto || 0,\n    moneda:                  datosFinancieros.moneda || 'MXN',\n    url_ticket:              urlTicket,\n    nivel_confiabilidad:     Math.round((agente.confidence_score || agente.confidence_level || 0) * 100),\n    estado:                  'pendiente',\n    observacion_ia:          [\n      agente.proveedor ? `Proveedor: ${agente.proveedor}` : '',\n      agente.origen    ? `Origen: ${agente.origen}` : '',\n      agente.metodo_pago ? `Método de pago: ${agente.metodo_pago}` : '',\n      agente.duplicate_probability > 0.5 ? `⚠️ Posible duplicado (${Math.round(agente.duplicate_probability * 100)}%)` : ''\n    ].filter(Boolean).join(' | '),\n    confirmado_por:          '',\n    fecha_confirmacion:      '',\n    // Contexto de sesión preservado por si acaso\n    _numeroremitente:        agente._numeroremitente,\n    _nombrecontacto:         agente._nombrecontacto,\n    _instancia:              agente._instancia\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3376,
+        752
+      ],
+      "id": "97121083-df7e-4fa3-bcc2-53e3634e91c7",
+      "name": "preparar_fila_movimiento"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1yKYv04bjxsLLNq02qUmmKbioJBpdH6eLVWfe19Ugui4",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "movimientos_por_confirmar",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id_movimiento",
+              "displayName": "id_movimiento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "concepto",
+              "displayName": "concepto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "categoria",
+              "displayName": "categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "monto",
+              "displayName": "monto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tipo",
+              "displayName": "tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "url_ticket",
+              "displayName": "url_ticket",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nivel_confiabilidad(%)",
+              "displayName": "nivel_confiabilidad(%)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "observacion_ia",
+              "displayName": "observacion_ia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "confirmado_por",
+              "displayName": "confirmado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fecha_confirmacion",
+              "displayName": "fecha_confirmacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "moneda",
+              "displayName": "moneda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nivel_confiabilidad",
+              "displayName": "nivel_confiabilidad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "_numeroremitente",
+              "displayName": "_numeroremitente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "_nombrecontacto",
+              "displayName": "_nombrecontacto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "_instancia",
+              "displayName": "_instancia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        3600,
+        752
+      ],
+      "id": "4f6421e9-55f3-498f-a729-f6d40634f52f",
+      "name": "insertar_movimientos_por_confirmar",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "75w59JzXVxT22FLT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('organizar_datos').item.json.instancia }}",
+        "remoteJid": "={{ $('organizar_datos').item.json.numeroremitente }}",
+        "messageText": "={{ '💰 *Balance Actual*\\n\\nEsta función estará disponible muy pronto. Muy pronto podrás consultar tu balance en tiempo real. 🚀' }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        2832,
+        1120
+      ],
+      "id": "5ce3074f-e788-4efd-ae51-9b6032b6c890",
+      "name": "responder_balance",
+      "credentials": {
+        "evolutionApi": {
+          "id": "P8U5dUCTGfLAcew9",
+          "name": "Evolution API VPS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('organizar_datos').item.json.instancia }}",
+        "remoteJid": "={{ $('organizar_datos').item.json.numeroremitente }}",
+        "messageText": "={{ '❓ *Información incompleta*\\n\\nNo pude registrar el movimiento porque faltan los siguientes datos:\\n\\n' + (($json.missing_fields || []).map(f => '• ' + f).join('\\n')) + '\\n\\nPor favor, envía nuevamente el mensaje con esa información.' }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        2832,
+        1504
+      ],
+      "id": "169b3c61-b4fa-466b-bf86-ea6c3f2e00b9",
+      "name": "responder_incompleto",
+      "credentials": {
+        "evolutionApi": {
+          "id": "P8U5dUCTGfLAcew9",
+          "name": "Evolution API VPS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('organizar_datos').item.json.instancia }}",
+        "remoteJid": "={{ $('organizar_datos').item.json.numeroremitente }}",
+        "messageText": "Lo siento, no puedo procesar este tipo de mensaje. Solo puedo recibir texto, notas de voz, imágenes y documentos. Por favor intenta de nuevo con uno de esos formatos.",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        1232
+      ],
+      "id": "6bfd4bd9-1835-4bc2-8747-2b191dbe5b65",
+      "name": "mensaje_tipo_no_soportado",
+      "credentials": {
+        "evolutionApi": {
+          "id": "P8U5dUCTGfLAcew9",
+          "name": "Evolution API VPS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('organizar_datos').item.json.numeroremitente }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4288,
+        752
+      ],
+      "id": "f31c60b0-4288-437d-a64c-5f1c644af542",
+      "name": "limpiar_redis",
+      "credentials": {
+        "redis": {
+          "id": "pKhUqN7pmPm4hhHp",
+          "name": "Redis VPS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 📥 Recibir y organizar mensaje WhatsApp",
+        "height": 248,
+        "width": 608,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1952,
+        1136
+      ],
+      "typeVersion": 1,
+      "id": "892cc20f-2f1f-4dd9-ad20-8d1123cd2045",
+      "name": "Nota 1"
+    },
+    {
+      "parameters": {
+        "content": "## 🔀 Clasificar tipo de mensaje\n(texto / audio / imagen / documento)",
+        "height": 840,
+        "width": 1760,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1232,
+        736
+      ],
+      "typeVersion": 1,
+      "id": "553b3d0a-513a-40c0-b7bb-10bb106b9cb2",
+      "name": "Nota 2"
+    },
+    {
+      "parameters": {
+        "content": "## 🧠 Agente IA Contralor\nExtrae datos financieros estructurados",
+        "height": 512,
+        "width": 800,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1392,
+        896
+      ],
+      "typeVersion": 1,
+      "id": "50a4a8c2-1781-43e8-ae6b-47aded0b1d4e",
+      "name": "Nota 3"
+    },
+    {
+      "parameters": {
+        "content": "## 📊 Registrar en Google Sheets + Google Drive\nGuardar comprobante → Insertar fila → Avisar al usuario → Recordatorio 24h",
+        "height": 400,
+        "width": 2016,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2640,
+        608
+      ],
+      "typeVersion": 1,
+      "id": "0a93b1a7-c286-4aba-aaab-fb52b543b5f5",
+      "name": "Nota 4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "instancia",
+              "value": "={{ $json.body.instance }}",
+              "type": "string"
+            },
+            {
+              "id": "c2",
+              "name": "numeroremitente",
+              "value": "={{ $json.body.data.key.remoteJid }}",
+              "type": "string"
+            },
+            {
+              "id": "c3",
+              "name": "nombrecontacto",
+              "value": "={{ $json.body.data.pushName }}",
+              "type": "string"
+            },
+            {
+              "id": "c4",
+              "name": "mensajetexto",
+              "value": "={{ ($json.body.data.message.conversation || '').trim().toUpperCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "c5",
+              "name": "tipomensaje",
+              "value": "={{ $json.body.data.messageType }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2544,
+        176
+      ],
+      "id": "11f987a2-c913-4e17-a5e9-35df2a73abd8",
+      "name": "organizar_datos_confirmacion"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ====== PARSEADOR V8 (El Sabueso Definitivo) ======\n\nconst rawData = $('Webhook_Unificado').first().json || $json;\nlet texto = '';\n\n// 🐕 Soltamos al Sabueso para encontrar en qué bolsillo está el voto\nfunction buscarVotoEscondido(obj) {\n    if (!obj || typeof obj !== 'object') return null;\n    if (Array.isArray(obj)) {\n        for (let item of obj) {\n            let hallazgo = buscarVotoEscondido(item);\n            if (hallazgo) return hallazgo;\n        }\n    } else {\n        // En WhatsApp Nuevo (Detecta dónde diste click)\n        if (obj.voters && Array.isArray(obj.voters) && obj.voters.length > 0 && typeof obj.name === 'string') {\n            return obj.name; \n        }\n        // En WhatsApp Viejo\n        if (obj.selectedOptions && Array.isArray(obj.selectedOptions) && obj.selectedOptions.length > 0) {\n            return obj.selectedOptions[0];\n        }\n        for (let key in obj) {\n            let hallazgo = buscarVotoEscondido(obj[key]);\n            if (hallazgo) return hallazgo;\n        }\n    }\n    return null;\n}\n\ntexto = buscarVotoEscondido(rawData) || \"\";\n\n// Si la encuesta falla, bajamos al texto normal\nif (!texto) {\n    texto = rawData.body?.data?.message?.conversation || \n            rawData.body?.data?.message?.buttonsResponseMessage?.selectedDisplayText || \"\";\n}\n\ntexto = texto.trim().toUpperCase();\n\n// ✂️ MÁGIA: Extraer separar Acción (SI) y Folio (MOV)\nconst match = texto.match(/^(SI|SÍ|NO|CONFIRMAR|RECHAZAR)\\s+(MOV-\\d+)/i);\n\nif (!match) {\n  return [{ json: { parse_ok: false, accion: null, id_movimiento: null, fallo_texto: texto } }];\n}\n\nconst accionRaw = match[1].toUpperCase();\nlet accion = 'NO';\nif (accionRaw === 'SÍ' || accionRaw === 'SI' || accionRaw === 'CONFIRMAR') {\n    accion = 'SI';\n}\n\nreturn [{\n  json: {\n    parse_ok: true,\n    accion: accion,\n    id_movimiento: match[2].toUpperCase(),\n    instancia: rawData.instance || \"\",\n    numeroremitente: rawData.body?.data?.key?.remoteJid || \"\",\n    nombrecontacto: rawData.body?.data?.pushName || \"\"\n  }\n}];\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2864,
+        176
+      ],
+      "id": "57cb8c10-9894-45a7-8e45-0dd5d49d569c",
+      "name": "parsear_comando"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1yKYv04bjxsLLNq02qUmmKbioJBpdH6eLVWfe19Ugui4",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "movimientos_por_confirmar",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id_movimiento",
+              "lookupValue": "={{ $json.numeroremitente }}\n"
+            },
+            {
+              "lookupColumn": "estado",
+              "lookupValue": "pendiente"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        3152,
+        176
+      ],
+      "id": "5979afe8-0f11-4a72-a8e3-88d0f12aa1f6",
+      "name": "buscar_movimiento_en_sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "75w59JzXVxT22FLT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ac1",
+              "leftValue": "={{ $node[\"parsear_comando\"]?.isExecuted ? $node[\"parsear_comando\"].json.accion : \"SI\" }}",
+              "rightValue": "SI",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3600,
+        176
+      ],
+      "id": "66952652-a6ae-4734-bb25-a2369a3c48fb",
+      "name": "usuario_aprueba?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ti1",
+              "leftValue": "={{ $json.tipo }}",
+              "rightValue": "ingreso",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3824,
+        96
+      ],
+      "id": "4a991382-a56f-44fe-8690-29fe3a745bb9",
+      "name": "es_ingreso_o_egreso?"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1yKYv04bjxsLLNq02qUmmKbioJBpdH6eLVWfe19Ugui4",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "ingresos",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id_movimiento",
+              "displayName": "id_movimiento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "concepto",
+              "displayName": "concepto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "categoria",
+              "displayName": "categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "monto",
+              "displayName": "monto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "link_ticket",
+              "displayName": "link_ticket",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "confirmado_por",
+              "displayName": "confirmado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fecha_confirmacion",
+              "displayName": "fecha_confirmacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "observaciones",
+              "displayName": "observaciones",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tipo",
+              "displayName": "tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "url_ticket",
+              "displayName": "url_ticket",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nivel_confiabilidad(%)",
+              "displayName": "nivel_confiabilidad(%)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "observacion_ia",
+              "displayName": "observacion_ia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "moneda",
+              "displayName": "moneda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nivel_confiabilidad",
+              "displayName": "nivel_confiabilidad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "_numeroremitente",
+              "displayName": "_numeroremitente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "_nombrecontacto",
+              "displayName": "_nombrecontacto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "_instancia",
+              "displayName": "_instancia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        4048,
+        0
+      ],
+      "id": "52486002-21a8-4f4b-bc3c-83b876d6672f",
+      "name": "insertar_en_ingresos",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "75w59JzXVxT22FLT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1yKYv04bjxsLLNq02qUmmKbioJBpdH6eLVWfe19Ugui4",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "egresos",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id_movimiento",
+              "displayName": "id_movimiento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "concepto",
+              "displayName": "concepto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "categoria",
+              "displayName": "categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "monto",
+              "displayName": "monto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "link_ticket",
+              "displayName": "link_ticket",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "confirmado_por",
+              "displayName": "confirmado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fecha_confirmacion",
+              "displayName": "fecha_confirmacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "observaciones",
+              "displayName": "observaciones",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        4048,
+        192
+      ],
+      "id": "018eb7db-a56b-4369-bd58-8034954ef52c",
+      "name": "insertar_en_egresos",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "75w59JzXVxT22FLT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1yKYv04bjxsLLNq02qUmmKbioJBpdH6eLVWfe19Ugui4",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "movimientos_por_confirmar",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_movimiento": "={{ $json.id_movimiento }}",
+            "estado": "=confirmado",
+            "confirmado_por": "={{ $json._nombrecontacto }} ",
+            "fecha_confirmacion": "={{ $now.format('YYYY-MM-DD HH:mm') }}",
+            "row_number": 0,
+            "fecha": "={{ $json.fecha }}",
+            "concepto": "={{ $json.concepto }}",
+            "tipo": "={{ $json.tipo }}",
+            "nivel_confiabilidad(%)": "={{ $json.nivel_confiabilidad }}",
+            "observacion_ia": "={{ $json.observacion_ia }}",
+            "categoria": "={{ $json.categoria }}",
+            "monto": "={{ $json.monto }}",
+            "url_ticket": "={{ $json.url_ticket }}",
+            "moneda": "={{ $json.moneda }}",
+            "nivel_confiabilidad": "={{ $json.nivel_confiabilidad }}",
+            "_nombrecontacto": "={{ $json._nombrecontacto }}",
+            "_numeroremitente": "={{ $json._numeroremitente }}",
+            "_instancia": "={{ $json._instancia }}"
+          },
+          "matchingColumns": [
+            "id_movimiento"
+          ],
+          "schema": [
+            {
+              "id": "id_movimiento",
+              "displayName": "id_movimiento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "concepto",
+              "displayName": "concepto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "categoria",
+              "displayName": "categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "monto",
+              "displayName": "monto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tipo",
+              "displayName": "tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "url_ticket",
+              "displayName": "url_ticket",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nivel_confiabilidad(%)",
+              "displayName": "nivel_confiabilidad(%)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "observacion_ia",
+              "displayName": "observacion_ia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "confirmado_por",
+              "displayName": "confirmado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_confirmacion",
+              "displayName": "fecha_confirmacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "moneda",
+              "displayName": "moneda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nivel_confiabilidad",
+              "displayName": "nivel_confiabilidad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "_numeroremitente",
+              "displayName": "_numeroremitente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "_nombrecontacto",
+              "displayName": "_nombrecontacto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "_instancia",
+              "displayName": "_instancia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        4272,
+        96
+      ],
+      "id": "0c08c716-742f-475c-98c8-69f99d76be62",
+      "name": "actualizar_estado_confirmado",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "75w59JzXVxT22FLT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1yKYv04bjxsLLNq02qUmmKbioJBpdH6eLVWfe19Ugui4",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "movimientos_por_confirmar",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_movimiento": "={{ $('parsear_comando').item.json.id_movimiento }}",
+            "estado": "rechazado",
+            "confirmado_por": "={{ $('parsear_comando').item.json.nombrecontacto }}",
+            "fecha_confirmacion": "={{ $now.format('YYYY-MM-DD HH:mm') }}",
+            "row_number": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id_movimiento",
+              "displayName": "id_movimiento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "concepto",
+              "displayName": "concepto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "categoria",
+              "displayName": "categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "monto",
+              "displayName": "monto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tipo",
+              "displayName": "tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "url_ticket",
+              "displayName": "url_ticket",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nivel_confiabilidad(%)",
+              "displayName": "nivel_confiabilidad(%)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "observacion_ia",
+              "displayName": "observacion_ia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "confirmado_por",
+              "displayName": "confirmado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_confirmacion",
+              "displayName": "fecha_confirmacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "moneda",
+              "displayName": "moneda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nivel_confiabilidad",
+              "displayName": "nivel_confiabilidad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "_numeroremitente",
+              "displayName": "_numeroremitente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "_nombrecontacto",
+              "displayName": "_nombrecontacto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "_instancia",
+              "displayName": "_instancia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        3824,
+        384
+      ],
+      "id": "5438f304-083c-4503-88f9-bcb4c802b5bb",
+      "name": "marcar_como_rechazado",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "75w59JzXVxT22FLT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $node[\"actualizar_estado_confirmado\"].json._instancia }}",
+        "remoteJid": "={{ $node[\"actualizar_estado_confirmado\"].json._numeroremitente }}",
+        "messageText": "={{ '✅ *Movimiento confirmado y registrado*\\n\\n🆔 ' + $node[\"actualizar_estado_confirmado\"].json.id_movimiento + '\\n\\nEl movimiento fue registrado en el libro contable. ¡Gracias por confirmar! 📊' }}\n",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        4496,
+        96
+      ],
+      "id": "06d81fe5-fdfd-4ebc-ab8f-e720cdc8c837",
+      "name": "avisar_confirmacion_exitosa",
+      "credentials": {
+        "evolutionApi": {
+          "id": "P8U5dUCTGfLAcew9",
+          "name": "Evolution API VPS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('parsear_comando').item.json.instancia }}",
+        "remoteJid": "={{ $('parsear_comando').item.json.numeroremitente }}",
+        "messageText": "={{ '❌ *Movimiento rechazado*\\n\\n🆔 ' + $('parsear_comando').item.json.id_movimiento + '\\n\\nEl movimiento fue marcado como *rechazado* y no se registrará en el libro contable.' }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        4048,
+        384
+      ],
+      "id": "9c29118a-ac02-4194-ab69-e891cf46f679",
+      "name": "avisar_rechazo",
+      "credentials": {
+        "evolutionApi": {
+          "id": "P8U5dUCTGfLAcew9",
+          "name": "Evolution API VPS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## ✅ Flujo de Confirmación - Agente_contralor_erick\n\nEste flujo escucha respuestas de WhatsApp con el formato:\n- *SI MOV-xxxxx* → Aprueba y mueve a ingresos/egresos\n- *NO MOV-xxxxx* → Rechaza y marca en movimientos_por_confirmar\n\n⚠️ IMPORTANTE: Debes configurar este webhook en EvoAPI apuntando al mismo número que el flujo principal, pero con el path 'contralor-erick-confirmacion'.",
+        "height": 880,
+        "width": 2200,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2464,
+        -208
+      ],
+      "typeVersion": 1,
+      "id": "c2f02593-5a55-4a48-a24d-ee0001245312",
+      "name": "Nota Confirmacion"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('organizar_datos').item.json.instancia }}",
+        "remoteJid": "={{ $('organizar_datos').item.json.numeroremitente }}",
+        "messageText": "={{ '📊 *Resumen Semanal*\\n\\nEsta función estará disponible muy pronto. Pronto podrás consultar tu resumen directamente aquí. 🚀' }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        2704,
+        944
+      ],
+      "id": "dd86e522-385a-405d-9f32-ff279eaa5eae",
+      "name": "responder_resumen",
+      "credentials": {
+        "evolutionApi": {
+          "id": "P8U5dUCTGfLAcew9",
+          "name": "Evolution API VPS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "14b06d76-4b36-4ecd-af5c-0a1abe8731e5",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "5219841680155@s.whatsapp.net",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "c977ba0e-8736-4474-a098-0207dfa0412f",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "5219841052790@s.whatsapp.net",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": "={{ false }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -2256,
+        560
+      ],
+      "id": "db04be28-3ad5-4491-8534-c67103a7de7d",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4b9f88eb-6d91-4065-9286-1646fb9bf94c",
+              "name": "confirmado_por",
+              "value": "={{ $('organizar_datos').first().json.nombrecontacto \n\n $('parsear_comando').first().json.nombrecontacto }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3376,
+        176
+      ],
+      "id": "9ec7df37-88ce-4edf-8f70-3336fdf7b37d",
+      "name": "unificar_datos_confirmacion"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('organizar_datos').item.json.numeroremitente }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        1040
+      ],
+      "id": "9d75969c-5004-4b05-bc57-fc8796c39169",
+      "name": "Redis1",
+      "credentials": {
+        "redis": {
+          "id": "pKhUqN7pmPm4hhHp",
+          "name": "Redis VPS"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2032,
+        1040
+      ],
+      "id": "9e3efc73-12fd-458b-906f-dfd1346c68ca",
+      "name": "No Operation, do nothing2"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('organizar_datos').item.json.instancia }}",
+        "remoteJid": "={{ $('organizar_datos').item.json.numeroremitente }}",
+        "messageText": "={{ '💰 🤖 ¡Hola! Soy Arturito. Solo entendí un saludo. Para registrar un movimiento, envíame el monto, el concepto y si es ingreso o egreso. 🚀' }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        2544,
+        1520
+      ],
+      "id": "44c2c0ad-78a6-44ce-bb84-67d0081ede78",
+      "name": "responder_otro",
+      "credentials": {
+        "evolutionApi": {
+          "id": "P8U5dUCTGfLAcew9",
+          "name": "Evolution API VPS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('organizar_datos').item.json.instancia }}",
+        "remoteJid": "={{ $('organizar_datos').item.json.numeroremitente }}",
+        "messageText": "={{ '🤖 ¡Ey! Por seguridad financiera, ya no acepto confirmaciones escritas a mano. Por favor, presiona los botones interactivos (✅ CONFIRMAR o ❌ RECHAZAR) que te envío debajo de cada movimiento nuevo. 🚀' }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        2832,
+        1312
+      ],
+      "id": "f9d080ef-268e-4324-b5a7-9f62d5671589",
+      "name": "confirmacion_sin_botones",
+      "credentials": {
+        "evolutionApi": {
+          "id": "P8U5dUCTGfLAcew9",
+          "name": "Evolution API VPS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "operation": "send-poll",
+        "instanceName": "={{$('parsear_json_agente').first().json._instancia }}",
+        "remoteJid": "={{$('parsear_json_agente').first().json._numeroremitente }}",
+        "caption": "¡Gasto registrado en Sheets! ¿Lo Confirmas?",
+        "options_display": {
+          "metadataValues": [
+            {
+              "optionValue": "=CONFIRMAR {{$json.id_movimiento}}"
+            },
+            {
+              "optionValue": "=RECHAZAR {{$json.id_movimiento}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        4080,
+        752
+      ],
+      "id": "18268b3f-e661-4d57-9444-097a29c4e4ff",
+      "name": "enviar_acuse_botones",
+      "credentials": {
+        "evolutionApi": {
+          "id": "P8U5dUCTGfLAcew9",
+          "name": "Evolution API VPS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('preparar_fila_movimiento').item.json._instancia }}\n",
+        "remoteJid": "={{ $('preparar_fila_movimiento').item.json._numeroremitente }}",
+        "messageText": "={{ '✅ *Movimiento capturado*\\n\\n' + ($('preparar_fila_movimiento').item.json.tipo === 'egreso' ? '💸 Egreso' : '💰 Ingreso') + ' · $' + $('preparar_fila_movimiento').item.json.monto + ' ' + 'MXN' + '\\n📋 Categoría: ' + $('preparar_fila_movimiento').item.json.categoria + '\\n📝 Concepto: ' + $('preparar_fila_movimiento').item.json.concepto + ($('preparar_fila_movimiento').item.json.url_ticket ? '\\n🔗 Comprobante guardado' : '') + '\\n🆔 ID: ' + $('preparar_fila_movimiento').item.json.id_movimiento + '\\n📊 Confianza: ' + $('preparar_fila_movimiento').item.json.nivel_confiabilidad + '%\\n\\nTe enviaré un recordatorio para que lo confirmes. Si algo no es correcto, puedes cancelarlo respondiendo:\\n❌ *NO ' + $('preparar_fila_movimiento').item.json.id_movimiento + '*' }}\n",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        3840,
+        752
+      ],
+      "id": "def0dfc1-36a1-41c6-b484-90695367cfc7",
+      "name": "enviar_acuse_whatsapp",
+      "credentials": {
+        "evolutionApi": {
+          "id": "P8U5dUCTGfLAcew9",
+          "name": "Evolution API VPS"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook_Unificado": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.arturoconsulting.com",
+            "user-agent": "axios/1.13.2",
+            "content-length": "2086",
+            "accept": "application/json, text/plain, */*",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "content-type": "application/json",
+            "x-forwarded-for": "172.18.0.1",
+            "x-forwarded-host": "n8n.arturoconsulting.com",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "e1e81227a1d9",
+            "x-real-ip": "172.18.0.1"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "event": "messages.upsert",
+            "instance": "arturo_4565",
+            "data": {
+              "key": {
+                "remoteJid": "5219841680155@s.whatsapp.net",
+                "remoteJidAlt": "280525906399270@lid",
+                "fromMe": false,
+                "id": "2A8C98FCBF295B2BF0AC",
+                "participant": "",
+                "addressingMode": "pn"
+              },
+              "pushName": "Arturo Rmz",
+              "status": "DELIVERY_ACK",
+              "message": {
+                "messageContextInfo": {
+                  "threadId": [],
+                  "deviceListMetadata": {
+                    "senderKeyIndexes": [],
+                    "recipientKeyIndexes": [],
+                    "senderKeyHash": {
+                      "0": 207,
+                      "1": 162,
+                      "2": 188,
+                      "3": 189,
+                      "4": 251,
+                      "5": 253,
+                      "6": 224,
+                      "7": 23,
+                      "8": 37,
+                      "9": 238
+                    },
+                    "senderTimestamp": {
+                      "low": 1774030802,
+                      "high": 0,
+                      "unsigned": true
+                    },
+                    "recipientKeyHash": {
+                      "0": 19,
+                      "1": 101,
+                      "2": 7,
+                      "3": 125,
+                      "4": 89,
+                      "5": 63,
+                      "6": 172,
+                      "7": 206,
+                      "8": 235,
+                      "9": 18
+                    },
+                    "recipientTimestamp": {
+                      "low": 1773713238,
+                      "high": 0,
+                      "unsigned": true
+                    }
+                  },
+                  "deviceListMetadataVersion": 2
+                },
+                "pollUpdateMessage": {
+                  "pollCreationMessageKey": {
+                    "remoteJid": "5219841680155@s.whatsapp.net",
+                    "fromMe": true,
+                    "id": "3EB0FA3B422CA0F8F85CAF",
+                    "participant": ""
+                  },
+                  "vote": {
+                    "encPayload": {
+                      "0": 155,
+                      "1": 238,
+                      "2": 219,
+                      "3": 73,
+                      "4": 24,
+                      "5": 194,
+                      "6": 178,
+                      "7": 79,
+                      "8": 35,
+                      "9": 218,
+                      "10": 247,
+                      "11": 93,
+                      "12": 138,
+                      "13": 117,
+                      "14": 83,
+                      "15": 41,
+                      "16": 169,
+                      "17": 110,
+                      "18": 159,
+                      "19": 170,
+                      "20": 14,
+                      "21": 249,
+                      "22": 84,
+                      "23": 147,
+                      "24": 189,
+                      "25": 65,
+                      "26": 132,
+                      "27": 119,
+                      "28": 210,
+                      "29": 206,
+                      "30": 203,
+                      "31": 225,
+                      "32": 104,
+                      "33": 152,
+                      "34": 19,
+                      "35": 94,
+                      "36": 89,
+                      "37": 3,
+                      "38": 25,
+                      "39": 167,
+                      "40": 160,
+                      "41": 54,
+                      "42": 216,
+                      "43": 191,
+                      "44": 236,
+                      "45": 114,
+                      "46": 74,
+                      "47": 88,
+                      "48": 20,
+                      "49": 108
+                    },
+                    "encIv": {
+                      "0": 33,
+                      "1": 38,
+                      "2": 58,
+                      "3": 23,
+                      "4": 198,
+                      "5": 47,
+                      "6": 8,
+                      "7": 142,
+                      "8": 87,
+                      "9": 1,
+                      "10": 176,
+                      "11": 188
+                    },
+                    "selectedOptions": [
+                      "CONFIRMAR MOV-1774301324941"
+                    ]
+                  },
+                  "senderTimestampMs": {
+                    "low": 479851963,
+                    "high": 413,
+                    "unsigned": false
+                  }
+                }
+              },
+              "messageType": "pollUpdateMessage",
+              "messageTimestamp": 1774301346,
+              "instanceId": "1a7cbee4-14c2-497d-a4ff-403b89363c91",
+              "source": "unknown",
+              "pollUpdates": [
+                {
+                  "name": "CONFIRMAR MOV-1774301324941",
+                  "voters": [
+                    "5219841680155@s.whatsapp.net"
+                  ]
+                },
+                {
+                  "name": "RECHAZAR MOV-1774301324941",
+                  "voters": []
+                }
+              ]
+            },
+            "destination": "https://n8n.arturoconsulting.com/webhook/contralor-erick",
+            "date_time": "2026-03-23T18:29:06.151Z",
+            "sender": "5219841414565@s.whatsapp.net",
+            "server_url": "https://api.arturoconsulting.com",
+            "apikey": "28682E12C447-46E1-99D8-29F1A2712BAE"
+          },
+          "webhookUrl": "https://n8n.arturoconsulting.com/webhook/contralor-erick",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook_Unificado": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es Confirmación?": {
+      "main": [
+        [
+          {
+            "node": "organizar_datos_confirmacion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "organizar_datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "organizar_datos": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "leermensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "leermensaje": {
+      "main": [
+        [
+          {
+            "node": "tipomensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tipomensaje": {
+      "main": [
+        [
+          {
+            "node": "texto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "extraer_base64_audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "extraer_base64_imagen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "extraer_base64_documento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "mensaje_tipo_no_soportado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "texto": {
+      "main": [
+        [
+          {
+            "node": "unificar_input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extraer_base64_audio": {
+      "main": [
+        [
+          {
+            "node": "Convert_audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extraer_base64_imagen": {
+      "main": [
+        [
+          {
+            "node": "Convert_to_image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extraer_base64_documento": {
+      "main": [
+        [
+          {
+            "node": "Convert_documento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert_audio": {
+      "main": [
+        [
+          {
+            "node": "Analyze_audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert_to_image": {
+      "main": [
+        [
+          {
+            "node": "Analyze_image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert_documento": {
+      "main": [
+        [
+          {
+            "node": "Analyze_documento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze_audio": {
+      "main": [
+        [
+          {
+            "node": "audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze_image": {
+      "main": [
+        [
+          {
+            "node": "imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze_documento": {
+      "main": [
+        [
+          {
+            "node": "documento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "audio": {
+      "main": [
+        [
+          {
+            "node": "unificar_input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "imagen": {
+      "main": [
+        [
+          {
+            "node": "unificar_input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "documento": {
+      "main": [
+        [
+          {
+            "node": "unificar_input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "unificar_input": {
+      "main": [
+        [
+          {
+            "node": "guardar_mensajes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "guardar_mensajes": {
+      "main": [
+        [
+          {
+            "node": "esperar_mas_mensajes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "esperar_mas_mensajes": {
+      "main": [
+        [
+          {
+            "node": "recuperar_lista_mensajes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "recuperar_lista_mensajes": {
+      "main": [
+        [
+          {
+            "node": "es_el_ultimo_mensaje?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "es_el_ultimo_mensaje?": {
+      "main": [
+        [
+          {
+            "node": "concatenar_mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, no_hacer_nada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "concatenar_mensaje": {
+      "main": [
+        [
+          {
+            "node": "agente_IA_principal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "agente_IA_principal": {
+      "main": [
+        [
+          {
+            "node": "Redis1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "agente_IA_principal",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "agente_IA_principal",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parsear_json_agente": {
+      "main": [
+        [
+          {
+            "node": "clasificar_intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "clasificar_intent": {
+      "main": [
+        [
+          {
+            "node": "tiene_comprobante?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "confirmacion_sin_botones",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "responder_resumen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "responder_balance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "responder_incompleto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "tiene_comprobante?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "responder_otro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tiene_comprobante?": {
+      "main": [
+        [
+          {
+            "node": "subir_comprobante_drive",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "preparar_fila_movimiento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "subir_comprobante_drive": {
+      "main": [
+        [
+          {
+            "node": "agregar_url_comprobante",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "agregar_url_comprobante": {
+      "main": [
+        [
+          {
+            "node": "preparar_fila_movimiento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "preparar_fila_movimiento": {
+      "main": [
+        [
+          {
+            "node": "insertar_movimientos_por_confirmar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "insertar_movimientos_por_confirmar": {
+      "main": [
+        [
+          {
+            "node": "enviar_acuse_whatsapp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "organizar_datos_confirmacion": {
+      "main": [
+        [
+          {
+            "node": "parsear_comando",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parsear_comando": {
+      "main": [
+        [
+          {
+            "node": "buscar_movimiento_en_sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "buscar_movimiento_en_sheets": {
+      "main": [
+        [
+          {
+            "node": "unificar_datos_confirmacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "usuario_aprueba?": {
+      "main": [
+        [
+          {
+            "node": "es_ingreso_o_egreso?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "marcar_como_rechazado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "es_ingreso_o_egreso?": {
+      "main": [
+        [
+          {
+            "node": "insertar_en_ingresos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "insertar_en_egresos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "insertar_en_ingresos": {
+      "main": [
+        [
+          {
+            "node": "actualizar_estado_confirmado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "insertar_en_egresos": {
+      "main": [
+        [
+          {
+            "node": "actualizar_estado_confirmado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "actualizar_estado_confirmado": {
+      "main": [
+        [
+          {
+            "node": "avisar_confirmacion_exitosa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "marcar_como_rechazado": {
+      "main": [
+        [
+          {
+            "node": "avisar_rechazo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "¿Es Confirmación?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "unificar_datos_confirmacion": {
+      "main": [
+        [
+          {
+            "node": "usuario_aprueba?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis1": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing2": {
+      "main": [
+        [
+          {
+            "node": "parsear_json_agente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enviar_acuse_botones": {
+      "main": [
+        [
+          {
+            "node": "limpiar_redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "limpiar_redis": {
+      "main": [
+        []
+      ]
+    },
+    "enviar_acuse_whatsapp": {
+      "main": [
+        [
+          {
+            "node": "enviar_acuse_botones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "969766ac-1325-47e3-af6a-5c969574a1cb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "247ef587dde7b7d555cea184a34eefdacf5e747d19bdd66f2807f3411cc15199"
+  },
+  "id": "cSXmowolxAUB8sXt",
+  "tags": [
+    {
+      "updatedAt": "2026-02-24T22:09:42.291Z",
+      "createdAt": "2026-02-24T22:09:42.291Z",
+      "id": "f92XvSoukan19WJs",
+      "name": "WhatsApp"
+    }
+  ]
+}
